@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -28,14 +29,14 @@ public abstract class AliasEnumUtil {
     }
 
     @SuppressWarnings("unchecked")
-    private static <E extends AliasEnum> Map<String, ? extends AliasEnum> getEnumAliases(Class<E> classType) {
+    private static <E extends AliasEnum> Map<String, E> getEnumAliases(Class<E> classType) {
         if (!classType.isEnum()) {
             throw new MalformedAliasEnumException(classType + " not an enum");
         }
 
-        EnumSet<? extends AliasEnum> all = EnumSet.allOf(((Class) classType));
-        HashMap<String, ? super AliasEnum> map = new HashMap<>();
-        for (AliasEnum aliasEnum : all) {
+        Set<E> all = EnumSet.allOf(((Class) classType));
+        HashMap<String, E> map = new HashMap<>();
+        for (E aliasEnum : all) {
             Collection<String> aliases = aliasEnum.getAliases();
             if (aliases == null || aliases.isEmpty()) {
                 throw new MalformedAliasEnumException("No alias found for " + classType);
@@ -45,14 +46,13 @@ public abstract class AliasEnumUtil {
                 putDistinct(map, alias, aliasEnum);
             }
 
-            Enum e = (Enum) aliasEnum;
-            putDistinct(map, e.name(), aliasEnum);
+            putDistinct(map, ((Enum) aliasEnum).name(), aliasEnum);
         }
 
-        return (Map<String, ? extends AliasEnum>) map;
+        return map;
     }
 
-    private static <V extends AliasEnum> void putDistinct(Map<String, ? super AliasEnum> map, String key, V value) {
+    private static <V extends AliasEnum> void putDistinct(Map<String, V> map, String key, V value) {
         Object prev = map.put(key, value);
         if (prev != null) {
             throw new MalformedAliasEnumException("Duplicate alias [" + key + "] among [" + value + ", " + prev + "]");
